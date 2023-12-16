@@ -20,6 +20,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     model = FClip()
+    # checkpoint = torch.load("checkpoint_best.pth", map_location="cpu")
     checkpoint = torch.load(f"logs/checkpoint{args.epoch:03}.pth", map_location="cpu")
     model.load_state_dict(checkpoint["model"])
     model.to(args.device)
