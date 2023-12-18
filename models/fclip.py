@@ -22,11 +22,13 @@ def encode_clam(lines: Tensor) -> Tuple[Tensor]:
     coff = torch.zeros((2, 128, 128), dtype=torch.float32)
     coff[:, yi, xi] = torch.stack((x - xi, y - yi))
     lines_vec = p2 - p1
-    disp = torch.norm(lines_vec) / 2
+    disp = torch.norm(lines_vec, dim=1) / 2
     llen = torch.zeros((128, 128), dtype=torch.float32)
     llen[yi, xi] = disp.clamp(0, 64) / 64
     lang = torch.zeros((128, 128), dtype=torch.float32)
-    lang[yi, xi] = (torch.atan2(lines_vec[:, 1], lines_vec[:, 0]) % torch.pi) / torch.pi
+    # the encoded angle is of the axial symmetry line of the original line
+    # why???
+    lang[yi, xi] = -(lines_vec[:, 1] / lines_vec[:, 0]).atan() % torch.pi / torch.pi
     return cloc, coff, llen, lang
 
 
@@ -107,7 +109,8 @@ class FClip(nn.Module):
             k=1000, soft=0.8, return_indices=True)
         radii = llen.flatten()[indices] * 64
         angles = lang.flatten()[indices] * torch.pi
-        displs = torch.stack((angles.cos(), -angles.sin().abs())) * radii
+        # account for y-axis reversal (negative sign)
+        displs = torch.stack((angles.cos(), -angles.sin())) * radii
         lines = torch.cat((centers + displs.t(), centers - displs.t()), dim=1)
         lines, scores = structrual_nms(lines, scores)
         return lines, scores

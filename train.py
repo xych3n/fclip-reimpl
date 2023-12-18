@@ -48,7 +48,7 @@ def criterion(outputs: Dict[str, List[Tensor]], targets: Dict[str, Tensor]):
     b, y, x = targets["cloc"].nonzero(as_tuple=True)
     for heatmaps in outputs["heatmaps"]:
         cloc = heatmaps[:, 0:2]
-        coff = heatmaps[:, 2:4].sigmoid()
+        coff = heatmaps[:, 2:4].sigmoid()[:, [1, 0]]
         llen = heatmaps[:, 4].sigmoid()
         lang = heatmaps[:, 5].sigmoid()
 
